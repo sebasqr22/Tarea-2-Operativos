@@ -2,77 +2,74 @@ BITS 16
 ORG 0x8000 ;arraque que se definio en en el bin
 
 start:
-    call set_console
-    mov si, menu
-    call print_string
+    call configurar_pantalla
+    mov si, menu_principal
+    call imprimir
 
-main_loop:
-    ; Lee la tecla presionada
+enciclado_principal:
     mov ah, 0x00
-    int 0x16                ; Interrupción para leer el teclado
+    int 0x16 ;interrupcion para el teclado
 
-    ; Ejecuta acciones basadas en la tecla presionada
-    cmp al, 'y'
-    je start_application
+    cmp al, 'c'
+    je comenzar
 
-    cmp al, 'p'
-    je exit_program
+    cmp al, 's'salir
+    je salir
 
     ; Vuelve al menú principal si la tecla no es reconocida
-    jmp main_loop
+    jmp enciclado_principal
 
-start_application:
-    call set_console
-    ; Muestra el mensaje
-    call kevin_up
+comenzar:
+    call configurar_pantalla
+    call arriba
 
 
-process_arrows:
+leer_teclas:
     mov ah, 00h           ; Leer el código extendido de la tecla
     int 16h               ; Espera una tecla
 
     ; Verificar si la tecla es W, A, S o D
-    cmp al, 'w'        
-    je kevin_up
+    cmp al, 48h        
+    je arriba
 
-    cmp al, 'a'           ; Verificar si la tecla es 'a'
-    je kevin_left
+    cmp al, 4Bh           ; Verificar si la tecla es 'a'
+    je izquierda
 
-    cmp al, 's'           ; Verificar si la tecla es 's'
-    je kevin_down
+    cmp al, 50h           ; Verificar si la tecla es 's'
+    je abajo
 
-    cmp al, 'd'           ; Verificar si la tecla es 'd'
-    je kevin_right
+    cmp al, 4Dh           ; Verificar si la tecla es 'd'
+    je derecha
 
     cmp al, 'r'
-    je restart
+    je volver_a_comenzar
 
     cmp al, 'p'
-    je exit_program
+    je salir
 
-    jmp process_arrows    ; Continuar en el bucle de entrada de teclas
+    jmp leer_teclas    ; Continuar en el bucle de entrada de teclas
 
  
-set_console:
+configurar_pantalla:
     ; Configura el modo de texto 80x25 con 16 colores
     mov ax, 0x03
     int 0x10
     ret
 
-restart:
+volver_a_comenzar:
     jmp start
 
-exit_program:
+salir:
     ; Se queda en un bucle infinito para detener el programa
-    call set_console
-    mov si, mensajeFin
-    call print_string
+    call configurar_pantalla
+    mov si, mensaje_finalizado
+    call imprimir
     cli
     hlt
     jmp $
 
 
-print_string:
+imprimir:
     mov ah, 0x0E        ; Función 0Eh de BIOS para imprimir caracteres
 .next_char:
     lodsb               ; Cargar el siguiente carácter de DS:SI en AL
@@ -84,87 +81,158 @@ print_string:
     ret
 
 
-kevin_left:
-    call set_console
-    KevinIzquie db '+++++', 0x0D,0x0A
-                db '  ++ ', 0x0D,0x0A
-                db ' +   ', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '++++ ', 0x0D,0x0A
-                db '    +', 0x0D,0x0A
-                db '++++ ', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '+ + +', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db ' + + ', 0x0D,0x0A
-                db '  +  ', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A,0    
-    mov si ,KevinIzquie
-    call print_string
-    jmp process_arrows
+izquierda:
+    call configurar_pantalla
+    izq db '#    ', 0x0D,0x0A
+                 db ' #   ', 0x0D,0x0A
+                 db '  ###', 0x0D,0x0A
+                 db ' #   ', 0x0D,0x0A
+                 db '#    ', 0x0D,0x0A
 
-kevin_up:
-    call set_console
-    KevinArriba db '+   +  +++  +   +  +++  +  +', 0x0D, 0x0A
-                db '+ +    +    +   +   +   ++ +', 0x0D, 0x0A
-                db '++     ++   +   +   +   + ++', 0x0D, 0x0A
-                db '+ +    +    +   +   +   + ++', 0x0D, 0x0A
-                db '+   +  +++    +    +++  +  +', 0x0D, 0x0A, 0
-    mov si ,KevinArriba
-    call print_string
-    jmp process_arrows
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
 
-kevin_right:
-    call set_console
-    kevinDerecha db '+++++', 0x0D,0x0A
-                db '  +  ', 0x0D,0x0A
-                db ' + + ', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A
-                db '+ + +', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db ' ++++', 0x0D,0x0A
-                db '+    ', 0x0D,0x0A
-                db ' ++++', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '+ + +', 0x0D,0x0A
-                db '+   +', 0x0D,0x0A
-                db '     ', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A
-                db '   + ', 0x0D,0x0A
-                db ' ++  ', 0x0D,0x0A
-                db '+++++', 0x0D,0x0A,0 
-    mov si ,kevinDerecha
-    call print_string
-    jmp process_arrows
+                 db '#   #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '#####', 0x0D,0x0A
+
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '# ###', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '### #', 0x0D,0x0A
+
+                  db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '# ###', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '### #', 0x0D,0x0A
+
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db ' ####', 0x0D,0x0A
+                 db '#  # ', 0x0D,0x0A
+                 db '#  # ', 0x0D,0x0A
+                 db '#  # ', 0x0D,0x0A
+                 db ' ####', 0x0D,0x0A
+
+                  db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db ' # # ', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '#   #', 0x0D,0x0A
+                 db '#####', 0x0D,0x0A,0  
+    mov si ,izq
+    call imprimir
+    jmp leer_teclas
+
+arriba:
+    call configurar_pantalla
+    arr db '####     ###    #####   #####   #####   #   #', 0x0D, 0x0A
+                db '#   #   #   #   #       #       #        # # ', 0x0D, 0x0A
+                db '# ##    #   #   #####   #####   ####      #  ', 0x0D, 0x0A
+                db '#   #   #####       #       #   #         #  ', 0x0D, 0x0A
+                db '####    #   #   #####   #####   #####     #  ', 0x0D, 0x0A, 0
+    mov si ,arr
+    call imprimir
+    jmp leer_teclas
+
+derecha:
+    call configurar_pantalla
+    der db '#####', 0x0D,0x0A
+                 db '#   #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db ' # # ', 0x0D,0x0A
+
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '#### ', 0x0D,0x0A
+                 db ' #  #', 0x0D,0x0A
+                 db ' #  #', 0x0D,0x0A
+                 db ' #  #', 0x0D,0x0A
+                 db '#### ', 0x0D,0x0A
+
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '# ###', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '### #', 0x0D,0x0A
+
+                  db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '# ###', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '### #', 0x0D,0x0A
+
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '#####', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '# # #', 0x0D,0x0A
+                 db '#   #', 0x0D,0x0A
+
+                  db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+                 db '', 0x0D,0x0A
+
+                 db '    #', 0x0D,0x0A
+                 db '   # ', 0x0D,0x0A
+                 db '###  ', 0x0D,0x0A
+                 db '   # ', 0x0D,0x0A
+                 db '    #', 0x0D,0x0A,0
+    mov si ,der
+    call imprimir
+    jmp leer_teclas
 
 
-kevin_down:
-    call set_console
-    kevinVuelta db '+   +  +++    +    +++  +  +', 0x0D,0x0A
-                db '+ +    +    +   +   +   + ++', 0x0D,0x0A
-                db '++     ++   +   +   +   + ++', 0x0D,0x0A
-                db '+ +    +    +   +   +   ++ +', 0x0D,0x0A
-                db '+   +  +++  +   +  +++  +  +', 0x0D,0x0A,0              
-    mov si ,kevinVuelta
-    call print_string
-    jmp process_arrows
+abajo:
+    call configurar_pantalla
+    abj db '####    #   #   #####   #####   #####     #  ', 0x0D, 0x0A
+                db '#   #   #####   #       #       #         #  ', 0x0D, 0x0A
+                db '# ##    #   #   #####   #####   ####      #  ', 0x0D, 0x0A
+                db '#   #   #   #       #       #   #        # # ', 0x0D, 0x0A
+                db '####     ###    #####   #####   #####   #   #', 0x0D, 0x0A, 0             
+    mov si ,abj
+    call imprimir
+    jmp leer_teclas
 
-mensajeFin db 'Se ha terminado el programa...', 0
-menu db 'Hola! Presiona alguna tecla:', 0x0D, 0x0A
-     db '- y: iniciar', 0x0D, 0x0A
-     db '- p: detener', 0x0D, 0x0A, 0
+
+menu_principal db 'Hola! Presiona alguna tecla:', 0x0D, 0x0A
+     db '- c: iniciar', 0x0D, 0x0A
+     db '- s: detener', 0x0D, 0x0A, 0
+
+
+mensaje_finalizado db 'Se ha terminado el programa...', 0
 
 times 995-($-$$) db 0   ; Rellenar con ceros hasta 510 bytes
 dw 0xAA55              ; Firma del sector de arranque
