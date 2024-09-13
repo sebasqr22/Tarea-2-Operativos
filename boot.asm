@@ -1,52 +1,33 @@
-BITS 16 ; se usan 16 bits 
-ORG 0x7C00 ; direccion de inicio
+org   0x7c00 ; indica la posición de memoria donde estará el código, al final establece 
+%define SECTOR_AMOUNT 0x4  ;
+jmp short start
 
 
 start:
-    mov ax, 0x0003 ; limpiar la pantalla
-    int 0x10 ; interrupcion de video
+;inicializa registros
+cli ; deshabilita las interrupciones globales
+xor ax, ax
+mov ds, ax
+mov ss, ax
+mov es, ax
+mov fs, ax
+mov gs, ax
+mov sp, 0x6ef0 ; Se coloca el stack poiter a una posición, en este ejemplo es 0x6ef0
+sti ;habilita interrupciones
 
-    mov si, mensaje_bienvenida ; direccion del mensaje
-    call imprimir ; imprimir mensaje
+mov ah, 0            ; se resetea el modo del disco
+int 0x13              ; interrupcion para utilizar el disco con el bios
+                      ;Read from harddrive and write to RAM
+mov bx, 0x8000        ; bx = direccion de memoria para leer (puntero)
+mov al, SECTOR_AMOUNT ; al = cantidad de sectores para lectura
+mov ch, 0             ; cilindro       = 0
+mov dh, 0             ; Cabeza         = 0
+mov cl, 2             ; sector         = 2
+mov ah, 2             ; ah = 2: lee desde el disco
+int 0x13   		      ; interrupcion para utilizar el disco con el bios
+jmp 0x8000
 
-esperar_tecla:
-    mov ah, 0 ; esperar_tecla
-    int 0x16 ; interrupcion de teclado
-    cmp al, 'y' ; si la tecla es 'y'
-    je comenzar_juego ; saltar a comenzar_juego
-    jmp esperar_tecla ; si no, esperar_tecla
-
-
-comenzar_juego:
-    mov ax, 0x0003 ; limpiar la pantalla
-    int 0x10 ; interrupcion de video
-    call generar_posiciones_random ; generar posiciones random
-    call imprimir_nombres ; imprimir nombres
-
-
-teclas:
-    mov ah, 00h ;leer codigo de la tecla
-    int 16h ;interrupcion de teclado
-
-    cmp al, 'w' ; tecla w
-    je limpiar_pantalla_aux ; saltar a limpiar_pantalla_aux
-    cmp al, 'a' ; tecla a
-    je limpiar_pantalla_aux ; saltar a limpiar_pantalla_aux
-    cmp al, 's' ; tecla s
-    je limpiar_pantalla_aux ; saltar a limpiar_pantalla_aux
-    cmp al, 'd' ; tecla d
-    je limpiar_pantalla_aux ; saltar a limpiar_pantalla_aux
-
-    jmp teclas ; si no, esperar_tecla
-
-
-limpiar_pantalla_aux:
-    call limpiar_pantalla ; limpiar la pantalla
-    call imprimir_nombres ; imprimir nombres
-    jmp teclas ; esperar_tecla
-
-hang:
-    jmp hang ; bucle infinito
-
-
-imprimir:
+; PADDING AND SIGNATURE
+times 510-($-$$) db 0 ; rellena a 512 con cero
+db  0x55
+db  0xaa ;número mágico, es para indicar que es bootloader
