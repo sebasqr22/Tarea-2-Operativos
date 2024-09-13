@@ -25,3 +25,25 @@ run: $(IMAGE_BIN)
 clean:
 	rm -f $(boot_BIN) $(MYNAME_BIN) $(IMAGE_BIN)
 
+run2:
+	rm -rf build
+	mkdir build
+	nasm -f bin boot.asm -o build/boot.bin
+	nasm -f bin myname.asm -o build/myname.bin
+
+	dd if=build/boot.bin of=build/app.img bs=512 count=1
+	dd if=build/myname.bin of=build/app.img bs=512 count=8 seek=1
+	
+	sudo xxd build/app.img
+
+	qemu-system-x86_64 -fda build/app.img
+	
+
+burn:
+	sudo dd if=/dev/zero of=/dev/sdb count=16000 bs=512
+	sudo dd if=build/app.img of=/dev/sdb
+	sudo xxd -s 0 -l 0x1200 /dev/sdb
+	
+	
+checkUSB:
+	ls -l /dev/disk/by-id/*usb*
